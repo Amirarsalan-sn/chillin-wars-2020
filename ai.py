@@ -129,7 +129,7 @@ class AI(RealtimeAI):
         t2 = time.time()
         print('\t\t\tdecide', t2 - t1)
 
-        act = self.state.alpha_beta_search(12)
+        act = self.state.alpha_beta_search(4)
         try:
             direct = direct_reverse[act]
             if act.value[2] == 1:

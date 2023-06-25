@@ -252,7 +252,7 @@ class State:
 
     def min_value(self, alpha, beta, depth):
         if depth < 1:
-            return self.f()
+            return self.hope()
 
         v = inf
         agent = self.enemy
@@ -282,7 +282,7 @@ class State:
 
     def max_value(self, alpha, beta, depth):
         if depth < 1:
-            return self.f()
+            return self.hope()
 
         v = -inf
         agent = self.me
@@ -310,32 +310,55 @@ class State:
     # 1 for max, 0 for min
     def hope(self, min_or_max=1):
         population = [Member(self)]
-        max_iteration = 20
-        population_size = 6
+        win_list = []
+        lose_list = []
+        new_generation = []
+        max_iteration = 5
+        population_size = 5
         for i in range(max_iteration):
+            if not population:
+                break
+            new_generation.clear()
             for member in population:
                 for act in member.state.me.get_valid_actions():
                     copy_state = member.state.copy()
                     copy_state.commit_action(copy_state.me, act)
-                    population.append(Member(copy_state))
+                    if copy_state.is_over():
+                        if copy_state.f() == inf:
+                            win_list.append(copy_state)
+                    else:
+                        new_generation.append(Member(copy_state))
 
-            population.sort(key=lambda y: y.fitness)
-            if len(population) > population_size:
-                tmp = population[randint(0, len(population) - 6)]
-                population = [tmp] + population[len(population) - 5:]
+            if len(new_generation) > population_size:
+                new_generation.sort(key=lambda y: y.fitness)
+                tmp = new_generation[randint(0, len(new_generation) - 5)]
+                population = [tmp] + new_generation[len(new_generation) - 4:]
+            else:
+                population = new_generation.copy()
 
+            new_generation.clear()
             for member in population:
                 for act in member.state.enemy.get_valid_actions():
                     copy_state = member.state.copy()
                     copy_state.commit_action(copy_state.enemy, act)
-                    population.append(Member(copy_state))
+                    if copy_state.is_over():
+                        if copy_state.f() == -inf:
+                            lose_list.append(copy_state)
+                    else:
+                        new_generation.append(Member(copy_state))
 
-            population.sort(key=lambda y: y.fitness, reverse=True)
-            if len(population) > population_size:
-                tmp = population[randint(0, len(population) - 6)]
-                population = [tmp] + population[len(population) - 5:]
+            if len(new_generation) > population_size:
+                new_generation.sort(key=lambda y: y.fitness, reverse=True)
+                tmp = new_generation[randint(0, len(new_generation) - 5)]
+                population = [tmp] + new_generation[len(new_generation) - 4:]
+            else:
+                population = new_generation.copy()
 
-
+        result = 0
+        if population:
+            population.sort(key=lambda y: y.fitness)
+            result = population[-1].fitness
+        return result + len(win_list) - len(lose_list)
 
     def copy(self):
         """copy_state = State(copy.deepcopy(self.board), CustomAgent(self.me.side,
@@ -490,8 +513,8 @@ if __name__ == "__main__":
 
     while (True):
         x = time.time()
-        state.hope()
-        """ai_act = state.alpha_beta_search(6)
+        #state.hope()
+        ai_act = state.alpha_beta_search(4)
         print(Fore.LIGHTMAGENTA_EX + '%.3f' % (time.time() - x) + Fore.RESET)
         state.commit_action(state.me, ai_act)
 
@@ -499,4 +522,4 @@ if __name__ == "__main__":
         state.commit_action(state.enemy, act)
 
         print_board(state)
-"""
+
