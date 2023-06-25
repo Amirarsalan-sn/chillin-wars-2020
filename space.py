@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 from math import inf
 from ks.models import ECell, EDirection, Position
@@ -307,6 +308,34 @@ class State:
 
     def hope(self, side: str) -> int:
         pass
+
+    def copy(self):
+        copy_state = State(copy.deepcopy(self.board), CustomAgent(self.me.side,
+                                                                  self.me.direction,
+                                                                  self.me.pos,
+                                                                  self.me.point,
+                                                                  self.me.is_breaker_active,
+                                                                  self.me.can_active_breaker,
+                                                                  self.me.breaker_cooldown,
+                                                                  self.me.breaker_rem_time,
+                                                                  self.me.health),
+                           CustomAgent(self.enemy.side,
+                                       self.enemy.direction,
+                                       self.enemy.pos,
+                                       self.enemy.point,
+                                       self.enemy.is_breaker_active,
+                                       self.enemy.can_active_breaker,
+                                       self.enemy.breaker_cooldown,
+                                       self.enemy.breaker_rem_time,
+                                       self.enemy.health))
+
+        return copy_state
+
+
+class Member:
+    def __init__(self, state: State):
+        self.state = state
+        self.fitness = state.f()
 
 
 """
