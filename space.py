@@ -1,4 +1,4 @@
-import copy
+from copy import deepcopy
 from enum import Enum
 from math import inf
 from ks.models import ECell, EDirection, Position
@@ -306,11 +306,22 @@ class State:
             alpha = max(alpha, v)
         return v
 
-    def hope(self, side: str) -> int:
-        pass
+    # 1 for max, 0 for min
+    def hope(self, min_or_max=1):
+        population = [Member(self)]
+        max_iteration = 1
+        population_size = 6
+        for i in range(max_iteration):
+            for member in population:
+                for act in member.state.me.get_valid_actions():
+                    copy_state = member.state.copy()
+                    copy_state.commit_action(copy_state.me, act)
+                    population.append(Member(copy_state))
 
+                population.sort(key=lambda y: y.fitness)
+                
     def copy(self):
-        copy_state = State(copy.deepcopy(self.board), CustomAgent(self.me.side,
+        """copy_state = State(copy.deepcopy(self.board), CustomAgent(self.me.side,
                                                                   self.me.direction,
                                                                   self.me.pos,
                                                                   self.me.point,
@@ -327,9 +338,9 @@ class State:
                                        self.enemy.can_active_breaker,
                                        self.enemy.breaker_cooldown,
                                        self.enemy.breaker_rem_time,
-                                       self.enemy.health))
+                                       self.enemy.health))"""
 
-        return copy_state
+        return deepcopy(self)
 
 
 class Member:
@@ -462,7 +473,8 @@ if __name__ == "__main__":
 
     while (True):
         x = time.time()
-        ai_act = state.alpha_beta_search(6)
+        state.hope()
+        """ai_act = state.alpha_beta_search(6)
         print(Fore.LIGHTMAGENTA_EX + '%.3f' % (time.time() - x) + Fore.RESET)
         state.commit_action(state.me, ai_act)
 
@@ -470,3 +482,4 @@ if __name__ == "__main__":
         state.commit_action(state.enemy, act)
 
         print_board(state)
+"""
