@@ -4,6 +4,7 @@ from math import inf
 from ks.models import ECell, EDirection, Position
 from colorama import Fore, Style
 import time
+from random import randint
 from math import ceil
 from random import randint
 
@@ -309,7 +310,7 @@ class State:
     # 1 for max, 0 for min
     def hope(self, min_or_max=1):
         population = [Member(self)]
-        max_iteration = 1
+        max_iteration = 20
         population_size = 6
         for i in range(max_iteration):
             for member in population:
@@ -318,8 +319,24 @@ class State:
                     copy_state.commit_action(copy_state.me, act)
                     population.append(Member(copy_state))
 
-                population.sort(key=lambda y: y.fitness)
-                
+            population.sort(key=lambda y: y.fitness)
+            if len(population) > population_size:
+                tmp = population[randint(0, len(population) - 6)]
+                population = [tmp] + population[len(population) - 5:]
+
+            for member in population:
+                for act in member.state.enemy.get_valid_actions():
+                    copy_state = member.state.copy()
+                    copy_state.commit_action(copy_state.enemy, act)
+                    population.append(Member(copy_state))
+
+            population.sort(key=lambda y: y.fitness, reverse=True)
+            if len(population) > population_size:
+                tmp = population[randint(0, len(population) - 6)]
+                population = [tmp] + population[len(population) - 5:]
+
+
+
     def copy(self):
         """copy_state = State(copy.deepcopy(self.board), CustomAgent(self.me.side,
                                                                   self.me.direction,
