@@ -252,7 +252,7 @@ class State:
 
     def min_value(self, alpha, beta, depth):
         if depth < 1:
-            return self.hope()
+            return self.f()
 
         v = inf
         agent = self.enemy
@@ -282,7 +282,7 @@ class State:
 
     def max_value(self, alpha, beta, depth):
         if depth < 1:
-            return self.hope()
+            return self.f()
 
         v = -inf
         agent = self.me
@@ -313,46 +313,88 @@ class State:
         win_list = []
         lose_list = []
         new_generation = []
-        max_iteration = 5
-        population_size = 5
+        max_iteration = 2
+        population_size = 6
         for i in range(max_iteration):
             if not population:
                 break
             new_generation.clear()
             for member in population:
                 for act in member.state.me.get_valid_actions():
-                    copy_state = member.state.copy()
+                    old_agent = CustomAgent(member.state.me.side,
+                                            member.state.me.direction,
+                                            member.state.me.pos,
+                                            member.state.me.point,
+                                            member.state.me.is_breaker_active,
+                                            member.state.me.can_active_breaker,
+                                            member.state.me.breaker_cooldown,
+                                            member.state.me.breaker_rem_time,
+                                            member.state.me.health)
+                    cell = member.state.commit_action(member.state.me, act)
+                    if member.state.is_over():
+                        if member.state.f() == inf:
+                            win_list.append(1)
+                    else:
+                        new_generation.append([member, act, member.state.f()])
+
+                    member.state.reverse_action(old_agent, member.state.me, cell)
+                    """copy_state = member.state.copy()
                     copy_state.commit_action(copy_state.me, act)
                     if copy_state.is_over():
                         if copy_state.f() == inf:
                             win_list.append(copy_state)
                     else:
-                        new_generation.append(Member(copy_state))
+                        new_generation.append(Member(copy_state))"""
 
             if len(new_generation) > population_size:
-                new_generation.sort(key=lambda y: y.fitness)
-                tmp = new_generation[randint(0, len(new_generation) - 5)]
-                population = [tmp] + new_generation[len(new_generation) - 4:]
-            else:
-                population = new_generation.copy()
+                new_generation.sort(key=lambda y: y[2])
+                tmp = new_generation[randint(0, len(new_generation) - 6)]
+                new_generation = [tmp] + new_generation[len(new_generation) - 5:]
+
+            population.clear()
+            for fake_member in new_generation:
+                copy_state = fake_member[0].state.copy()
+                copy_state.commit_action(copy_state.me, fake_member[1])
+                population.append(Member(copy_state))
 
             new_generation.clear()
             for member in population:
                 for act in member.state.enemy.get_valid_actions():
-                    copy_state = member.state.copy()
+                    old_agent = CustomAgent(member.state.enemy.side,
+                                            member.state.enemy.direction,
+                                            member.state.enemy.pos,
+                                            member.state.enemy.point,
+                                            member.state.enemy.is_breaker_active,
+                                            member.state.enemy.can_active_breaker,
+                                            member.state.enemy.breaker_cooldown,
+                                            member.state.enemy.breaker_rem_time,
+                                            member.state.enemy.health)
+                    cell = member.state.commit_action(member.state.enemy, act)
+                    if member.state.is_over():
+                        if member.state.f() == -inf:
+                            lose_list.append(1)
+                    else:
+                        new_generation.append([member, act, member.state.f()])
+
+                    member.state.reverse_action(old_agent, member.state.enemy, cell)
+                    """copy_state = member.state.copy()
                     copy_state.commit_action(copy_state.enemy, act)
                     if copy_state.is_over():
                         if copy_state.f() == -inf:
                             lose_list.append(copy_state)
                     else:
-                        new_generation.append(Member(copy_state))
+                        new_generation.append(Member(copy_state))"""
 
             if len(new_generation) > population_size:
-                new_generation.sort(key=lambda y: y.fitness, reverse=True)
-                tmp = new_generation[randint(0, len(new_generation) - 5)]
-                population = [tmp] + new_generation[len(new_generation) - 4:]
-            else:
-                population = new_generation.copy()
+                new_generation.sort(key=lambda y: y[2], reverse=True)
+                tmp = new_generation[randint(0, len(new_generation) - 6)]
+                new_generation = [tmp] + new_generation[len(new_generation) - 5:]
+
+            population.clear()
+            for fake_member in new_generation:
+                copy_state = fake_member[0].state.copy()
+                copy_state.commit_action(copy_state.enemy, fake_member[1])
+                population.append(Member(copy_state))
 
         result = 0
         if population:
