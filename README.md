@@ -4,3 +4,4 @@ A project for chillin wars competition(year 2020) written in Python, which agent
 ![Game UI](/Image/image2.png)
 # result of the compatition:
 first place :).
+![Ranking Table](/Image/image.png)
